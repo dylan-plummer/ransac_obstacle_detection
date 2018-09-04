@@ -16,7 +16,7 @@ def get_obstacles_with_plane(depth_frame, num_planes, num_points, dist_thresh, v
 
     xyz_arr = depthMatrixToPointCloudPos(depth_frame) #convert depth data to XYZ coordinates
     start_time = time.time()
-    center, plane, theta = get_orientation(xyz_arr, num_points)
+    center, plane, theta = get_orientation(xyz_arr, num_points, num_planes)
     CameraPosition['elevation'] = -theta
     center = applyCameraOrientation(center)
     plane = applyCameraOrientation(plane)

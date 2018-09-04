@@ -137,7 +137,7 @@ def plane_fit(points):
     M = np.dot(x, x.T) # Could also use np.cov(x) here.
     return ctr, svd(M)[0][:,-1]
 
-def get_orientation(xyz_arr, n_iter):
+def get_orientation(xyz_arr, num_points, n_iter):
     """
     center, plane, theta = get_orientation(xyz_arr, num_points)
 
@@ -152,7 +152,7 @@ def get_orientation(xyz_arr, n_iter):
     centers = []
     for _ in range(0, n_iter):
         rand_points = []
-        while len(rand_points) < 10:
+        while len(rand_points) < num_points:
             index = random.randrange(0,len(xyz_arr))
             if not xyz_arr[index].all() == np.zeros(3).all():
                 rand_points.append(xyz_arr[index])
