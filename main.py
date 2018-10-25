@@ -7,8 +7,9 @@ import pandas as pd
 from obstacle_detection import get_obstacles_with_plane
 from depth_image_processing import *
 
-img = np.load('kinect_data/116.npy')
-output = get_obstacles_with_plane(img, num_planes = 46,
-                                  num_points = 45,
-                                  dist_thresh = 0.1,
-                                  visualize = False)
+img = np.load('test_frame.npy')
+output = get_obstacles_with_plane(img, num_planes=46,
+                                  num_points=45,
+                                  dist_thresh=0.1,
+                                  visualize=False,
+                                  send_data=True)
