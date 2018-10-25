@@ -9,8 +9,10 @@ import pandas as pd
 from pyntcloud import PyntCloud
 from IPython.display import display, HTML
 from depth_image_processing import *
+from obstacle import Obstacle
+from ros_publish import send_obstacle_data
 
-def get_obstacles_with_plane(depth_frame, num_planes, num_points, dist_thresh, visualize):
+def get_obstacles_with_plane(depth_frame, num_planes, num_points, dist_thresh, visualize, send_data=False):
     obstacles = np.zeros(depth_frame.shape) #empty image that will store the locations of detected obstacles
     img = np.uint8(depth_frame) #some opencv functions require a byte image
 
@@ -31,7 +33,7 @@ def get_obstacles_with_plane(depth_frame, num_planes, num_points, dist_thresh, v
         lines = [
             {
                 # X axis
-                "color": "red", 
+                "color": "red",
                 "vertices": [[0, 0, 0], [10, 0, 0]]
             },
             {
@@ -56,7 +58,7 @@ def get_obstacles_with_plane(depth_frame, num_planes, num_points, dist_thresh, v
     plane_img = np.uint8((np.ones((424,512)) * 255) - plane_img) #invert img so pixel value corresponds to NOT ground plane
     ret, plane_img = cv2.threshold(plane_img,0,255,cv2.THRESH_BINARY) #filter points that are probaly not ground plane
     plane_img = cv2.subtract(img, plane_img)
-    
+
     #noise removal
     kernel = np.ones((3,3),np.uint8)
     opening = cv2.morphologyEx(plane_img ,cv2.MORPH_OPEN, kernel, iterations = 3) #erosion followed by dilation
@@ -98,8 +100,8 @@ def get_obstacles_with_plane(depth_frame, num_planes, num_points, dist_thresh, v
                 mask = cv2.erode(mask, kernel, iterations=3) #erode the mask to remove background points
                 img_fg = cv2.bitwise_and(depth_frame,depth_frame,mask = mask) #use the mask to isolate original depth values
                 img_fg = cv2.medianBlur(img_fg,5) #median blur to further remove noise
-                obstacles = cv2.add(np.float32(img_fg), np.float32(obstacles)) 
-                
+                obstacles = cv2.add(np.float32(img_fg), np.float32(obstacles))
+
                 mean_val = np.median(img_fg[img_fg.nonzero()]) #compute the non-zero average of obstacle depth values
                 min_val, distance_to_object, min_loc, max_loc = cv2.minMaxLoc(img_fg)
 
@@ -111,23 +113,25 @@ def get_obstacles_with_plane(depth_frame, num_planes, num_points, dist_thresh, v
                     coords = depthToPointCloudPos(cx, cy, mean_val) #convert obstacle depth to XYZ coordinate
 
                     mm_diameter = (equi_diameter) * (1.0 / CameraParams['fx']) * mean_val #convert pixel diameter to mm
-
-                    #begin visualization
-                    cv2.drawContours(color,[box],0,(0,0,255),1)
-                    cv2.rectangle(color,(x,y),(x+obj_length,y+obj_height),(0,255,0),2)
-                    font = cv2.FONT_HERSHEY_SIMPLEX
-                    cv2.putText(color, "x" + str(coords[0]), (cx,cy+30), font, 0.4, (0, 0, 255), 1, cv2.LINE_AA)
-                    cv2.putText(color, "y" + str(coords[1]), (cx,cy+45), font, 0.4, (0, 255, 0), 1, cv2.LINE_AA)
-                    cv2.putText(color, "z" + str(mean_val), (cx,cy+60), font, 0.4, (255, 0, 0), 1, cv2.LINE_AA)
-                    cv2.putText(color,"diameter = " + str(mm_diameter), (cx,cy + 15), font, 0.4, (255, 0, 0), 1, cv2.LINE_AA)
+                    obs = Obstacle(coords[0], coords[1], mean_val, mm_diameter)
+                    if send_data:
+                            send_obstacle_data(obs)
+                    if visualize:
+                        #begin visualization
+                        cv2.drawContours(color,[box],0,(0,0,255),1)
+                        cv2.rectangle(color,(x,y),(x+obj_length,y+obj_height),(0,255,0),2)
+                        font = cv2.FONT_HERSHEY_SIMPLEX
+                        cv2.putText(color, "x" + str(coords[0]), (cx,cy+30), font, 0.4, (0, 0, 255), 1, cv2.LINE_AA)
+                        cv2.putText(color, "y" + str(coords[1]), (cx,cy+45), font, 0.4, (0, 255, 0), 1, cv2.LINE_AA)
+                        cv2.putText(color, "z" + str(mean_val), (cx,cy+60), font, 0.4, (255, 0, 0), 1, cv2.LINE_AA)
+                        cv2.putText(color,"diameter = " + str(mm_diameter), (cx,cy + 15), font, 0.4, (255, 0, 0), 1, cv2.LINE_AA)
 
         except:
             print ("Failed to process image")
             print (sys.exc_info()[0])
-            
+
     elapsed_time = time.time() - start_time
     #print("Frame took " + str(elapsed_time) + " seconds to process")
 
 
     return obstacles
-
