@@ -6,8 +6,6 @@ import os, os.path
 import sys
 import time
 import pandas as pd
-from pyntcloud import PyntCloud
-from IPython.display import display, HTML
 from depth_image_processing import *
 from obstacle import Obstacle
 from ros_publish import send_obstacle_data
@@ -69,7 +67,7 @@ def get_obstacles_with_plane(depth_frame, num_planes, num_points, dist_thresh, v
     image, contours, hierarchy = cv2.findContours(opening,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
     color = cv2.drawContours(color, contours, -1, (0,255,0), 1)
     for cntr in contours:
-        try:
+        #try:
             #calculate diamter of equivalent circle
             #this measurement is only used for checking if countours fit our bounds
             area = cv2.contourArea(cntr)
@@ -126,9 +124,9 @@ def get_obstacles_with_plane(depth_frame, num_planes, num_points, dist_thresh, v
                         cv2.putText(color, "z" + str(mean_val), (cx,cy+60), font, 0.4, (255, 0, 0), 1, cv2.LINE_AA)
                         cv2.putText(color,"diameter = " + str(mm_diameter), (cx,cy + 15), font, 0.4, (255, 0, 0), 1, cv2.LINE_AA)
 
-        except:
-            print ("Failed to process image")
-            print (sys.exc_info()[0])
+       # except:
+         #   print ("Failed to process image")
+         #   print (sys.exc_info()[0])
 
     elapsed_time = time.time() - start_time
     #print("Frame took " + str(elapsed_time) + " seconds to process")
