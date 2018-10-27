@@ -2,3 +2,4 @@ kinect_data/
 .ipynb_checkpoints/
 saved/
 blender_data/
+*.pyc
