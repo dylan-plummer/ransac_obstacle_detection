@@ -1,6 +1,5 @@
 import rospy
-from geometry_msgs.msg import Quaternion
-#import Obstacle
+from geometry_msgs.msg import Obstacle
 
 topic = 'obstacleDetection'
 node_name = 'master'
