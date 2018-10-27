@@ -2,14 +2,14 @@ import rospy
 from geometry_msgs.msg import Quaternion
 #import Obstacle
 
-topic = 'obstacles'
+topic = 'obstacleDetection'
 node_name = 'master'
 
 def send_obstacle_data(obs):
     global topic
     global node_name
     try:
-        pub = rospy.Publisher(topic, Quaternion)
+        pub = rospy.Publisher(topic, Quaternion, queue_size=10)
 	msg = Quaternion()
 	msg.x = obs.x
 	msg.y = obs.y
