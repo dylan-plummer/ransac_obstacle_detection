@@ -59,7 +59,7 @@ def depthMatrixToPointCloudPos(z, scale=1000):
 def depthToPointCloudPos(x_d, y_d, z, scale=1000):
     """
     x, y, z = (row, col, depth)
-    
+
     Given a point from a depth image
     and its position in the image,
     returns the x, y, and z coordinates
@@ -118,7 +118,7 @@ def applyCameraMatrixOrientation(pt):
     # Apply offsets for height and linear position of the sensor (from viewport's center)
     pt[:] += np.float_([CameraPosition['x'], CameraPosition['y'], CameraPosition['z']])
     return pt
-	
+
 def plane_fit(points):
     """
     p, n = plane_fit(points)
@@ -137,7 +137,7 @@ def plane_fit(points):
     M = np.dot(x, x.T) # Could also use np.cov(x) here.
     return ctr, svd(M)[0][:,-1]
 
-def get_orientation(xyz_arr, num_points, n_iter):
+def get_orientation(xyz_arr, num_points, num_planes):
     """
     center, plane, theta = get_orientation(xyz_arr, num_points)
 
@@ -150,19 +150,21 @@ def get_orientation(xyz_arr, num_points, n_iter):
     pitch = []
     planes = []
     centers = []
-    for _ in range(0, n_iter):
+    for _ in range(0, num_points):
         rand_points = []
-        while len(rand_points) < num_points:
+        while len(rand_points) < 10:
             index = random.randrange(0,len(xyz_arr))
             if not xyz_arr[index].all() == np.zeros(3).all():
                 rand_points.append(xyz_arr[index])
+            #print(np.array(rand_points))
         rand_points = np.array(rand_points).T
-        ctr, P = plane_fit(rand_points)
-        r = math.sqrt(P[0]**2 + P[1]**2 + P[2]**2)
-        theta = math.acos(P[2]/r) * 180 / math.pi
-        phi = math.atan(P[1]/P[0]) * 180 / math.pi
-        pitch.append(theta)
-        planes.append(P)
-        centers.append(ctr)
+        for _ in range(0, num_planes):
+            ctr, P = plane_fit(rand_points)
+            r = math.sqrt(P[0]**2 + P[1]**2 + P[2]**2)
+            theta = math.acos(P[2]/r) * 180 / math.pi
+            phi = math.atan(P[1]/P[0]) * 180 / math.pi
+            pitch.append(theta)
+            planes.append(P)
+            centers.append(ctr)
     return np.mean(centers, axis = 0), np.mean(planes, axis = 0), np.mean(pitch)
     
